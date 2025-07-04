@@ -1,0 +1,17 @@
+[Unit]
+Description=Google Ads Creative Automation Streamlit App
+After=network.target
+
+[Service]
+Type=simple
+User=batata
+WorkingDirectory=/home/batata/Documentos/ajuda_aspida
+Environment=PATH=/home/batata/Documentos/ajuda_aspida/venv/bin
+ExecStart=/home/batata/Documentos/ajuda_aspida/venv/bin/streamlit run streamlit_app_final_limpo.py --server.port 8502 --server.address 0.0.0.0 --server.headless true
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target 

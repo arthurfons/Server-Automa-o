@@ -20,6 +20,11 @@ class Config:
     SHEETS_CREDENTIALS_FILE = os.getenv("SHEETS_CREDENTIALS_FILE", "sheets_credentials.json")
     GOOGLE_ADS_YAML = os.getenv("GOOGLE_ADS_YAML", "google-ads.yaml")
     
+    # Environment Variables for Railway
+    GOOGLE_ADS_YAML_CONTENT = os.getenv("GOOGLE_ADS_YAML")
+    DRIVE_CREDENTIALS_CONTENT = os.getenv("DRIVE_CREDENTIALS")
+    SHEETS_CREDENTIALS_CONTENT = os.getenv("SHEETS_CREDENTIALS")
+    
     # Image Configuration
     IMAGE_WIDTH = int(os.getenv("IMAGE_WIDTH", "336"))
     IMAGE_HEIGHT = int(os.getenv("IMAGE_HEIGHT", "280"))

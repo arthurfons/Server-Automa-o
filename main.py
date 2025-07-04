@@ -26,91 +26,56 @@ except ImportError:
     NOTIFICATION_AVAILABLE = True
 
 
+# Import config
+from config import config, IDIOMAS_POR_PAIS
+
 # ------------------------ CONFIGURAÇÕES GERAIS ------------------------
-MAX_REQUESTS = 3000
+MAX_REQUESTS = config.MAX_REQUESTS
 request_count = 0  # Contador de requisições feitas
 
-PASTA_OUTPUT = "output"
-TEMPLATES_DIR = "templates"
-LOGOS_DIR = "logos"
-DIMENSOES = (336, 280)      # Dimensões compatíveis com Google Ads
-LOGO_SIZE = (45, 14)        # Tamanho da logo
+PASTA_OUTPUT = config.OUTPUT_DIR
+TEMPLATES_DIR = config.TEMPLATES_DIR
+LOGOS_DIR = config.LOGOS_DIR
+DIMENSOES = config.DIMENSOES      # Dimensões compatíveis com Google Ads
+LOGO_SIZE = config.LOGO_SIZE        # Tamanho da logo
 
 # IDs das pastas no Google Drive
-TEMPLATES_DRIVE_FOLDER_ID = "1LElWu5TVRw9Xbzhgm1wm58pv0u3pVgMl"  # Substitua pelo ID da pasta de templates
-LOGOS_DRIVE_FOLDER_ID = "1cVRl4kUOltDLxnMYLiVFe69MAHI8KnrL"  # ID da pasta de logos
+TEMPLATES_DRIVE_FOLDER_ID = config.TEMPLATES_DRIVE_FOLDER_ID
+LOGOS_DRIVE_FOLDER_ID = config.LOGOS_DRIVE_FOLDER_ID
 
-IDIOMAS_POR_PAIS = {
-    "arabia": "arabian",
-    "arg": "Espanhol ",
-    "alemanha": "alemão",
-    "argelia": "arabic",
-    "australia": "english",
-    "austria": "german",
-    "belgica": "french",
-    "bielorrussia": "bielorrussian",
-    "brasil": "portuguese",
-    "bulgaria": "bulgaro",
-    "canada": "english-ca",
-    "chile": "Espanho",
-    "colombia": "Espanhol",
-    "croacia": "croatian",
-    "dinamarca": "dinamarques",
-    "egito": "arabic",
-    "emirados arabes": "arabian",
-    "emirados arabes ingles": "arabian english",
-    "equador": "Espanhol",
-    "espanha": "Espanhol ",
-    "estonia": "estonian",
-    "eua": "english",
-    "filipinas": "filipino",
-    "finlandia": "finlandes",
-    "frança": "french",
-    "georgia": "georgian",
-    "grecia": "grego",
-    "holanda": "dutch",
-    "hungria": "hungarian",
-    "india": "hindi",
-    "indonesia": "indonesio",
-    "irlanda": "ireland",
-    "israel": "hebrew",
-    "italia": "italiano",
-    "japao": "japanese",
-    "ko": "coreano",
-    "lituania": "lituano",
-    "malasia": "malay",
-    "marrocos": "arabic",
-    "mexico": "Espanh",
-    "nigeria": "english",
-    "noruega": "noruegues",
-    "nz": "english",
-    "peru": "Espanhol",
-    "polonia": "poland",
-    "portugal": "portuguese-pt",
-    "paraguai": "Espanhol",
-    "uk": "english-uk",
-    "romenia": "romanian",
-    "russia": "russian",
-    "servia": "serbian",
-    "singapura": "english",
-    "SK": "Eslovaco",
-    "suica": "suico",
-    "suecia": "sueco",
-    "taiwan": "mandarin",
-    "tailandia": "thai",
-    "tcheca": "tcheco",
-    "tunisia": "arabic",
-    "turquia": "turkish",
-    "ucrania": "ucraniano",
-    "uk": "english-uk",
-    "vietna": "vietnamese",
-    "uruguai": "Espanhol",
-}
+def create_credentials_files():
+    """Create credential files from environment variables for Railway deployment"""
+    try:
+        # Create Google Ads YAML file
+        if config.GOOGLE_ADS_YAML_CONTENT:
+            with open("google-ads.yaml", "w") as f:
+                f.write(config.GOOGLE_ADS_YAML_CONTENT)
+            print("✅ Google Ads YAML file created from environment variable")
+        
+        # Create Drive credentials file
+        if config.DRIVE_CREDENTIALS_CONTENT:
+            with open("drive_credentials.json", "w") as f:
+                f.write(config.DRIVE_CREDENTIALS_CONTENT)
+            print("✅ Drive credentials file created from environment variable")
+        
+        # Create Sheets credentials file
+        if config.SHEETS_CREDENTIALS_CONTENT:
+            with open("sheets_credentials.json", "w") as f:
+                f.write(config.SHEETS_CREDENTIALS_CONTENT)
+            print("✅ Sheets credentials file created from environment variable")
+            
+    except Exception as e:
+        print(f"❌ Error creating credential files: {e}")
+
+# Create credential files if environment variables are available
+create_credentials_files()
+
+# Use IDIOMAS_POR_PAIS from config
 
 
 # Configuração do Google Sheets – sua planilha deve ter as 6 colunas: Site, ID da Conta, Nome da Conta, ID do Grupo de Anúncios, Campanha, País.
-SHEET_ID = "1QQ7_ByU8siGV_NAMXM-fWiEt60fyPOJp0h-RshNsFeg"
-SHEET_RANGE = "Página1!A:F"
+SHEET_ID = config.SHEET_ID
+SHEET_RANGE = config.SHEET_RANGE
 
 # ------------------------ FUNÇÕES DO GOOGLE DRIVE ------------------------
 def get_drive_service():

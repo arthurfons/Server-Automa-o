@@ -182,24 +182,26 @@ def test_drive_access():
     return True
 
 def list_all_logos():
-    """Lista todas as logos disponíveis no Google Drive."""
+    """Lista todas as logos disponíveis no Google Drive, com paginação."""
     try:
         service = get_drive_service()
-        
-        # Lista todos os arquivos PNG na pasta de logos
-        logo_files = service.files().list(
-            q=f"'{LOGOS_DRIVE_FOLDER_ID}' in parents and mimeType = 'image/png' and trashed = false",
-            fields="files(id, name)",
-            pageSize=100
-        ).execute()
-        
-        files = logo_files.get('files', [])
-        print(f"🎨 Todas as logos disponíveis ({len(files)}):")
-        for file in files:
+        all_files = []
+        page_token = None
+        while True:
+            response = service.files().list(
+                q=f"'{LOGOS_DRIVE_FOLDER_ID}' in parents and mimeType = 'image/png' and trashed = false",
+                fields="nextPageToken, files(id, name)",
+                pageSize=1000,  # máximo permitido pela API
+                pageToken=page_token
+            ).execute()
+            all_files.extend(response.get('files', []))
+            page_token = response.get('nextPageToken', None)
+            if not page_token:
+                break
+        print(f"🎨 Todas as logos disponíveis ({len(all_files)}):")
+        for file in all_files:
             print(f"  - {file['name']}")
-        
-        return files
-        
+        return all_files
     except Exception as e:
         print(f"❌ Erro ao listar logos: {e}")
         return []

@@ -184,12 +184,25 @@ section[data-testid="stSidebar"] {
 """, unsafe_allow_html=True)
 
 def check_credentials():
-    """Check if all required credential files exist"""
+    """Check if all required credential files exist and create them from environment variables if needed"""
     required_files = [
         "google-ads.yaml",
         "drive_credentials.json", 
         "sheets_credentials.json"
     ]
+    
+    # Create credential files from environment variables if they don't exist
+    if not os.path.exists("google-ads.yaml") and config.GOOGLE_ADS_YAML_CONTENT:
+        with open("google-ads.yaml", "w") as f:
+            f.write(config.GOOGLE_ADS_YAML_CONTENT)
+    
+    if not os.path.exists("drive_credentials.json") and config.DRIVE_CREDENTIALS_CONTENT:
+        with open("drive_credentials.json", "w") as f:
+            f.write(config.DRIVE_CREDENTIALS_CONTENT)
+    
+    if not os.path.exists("sheets_credentials.json") and config.SHEETS_CREDENTIALS_CONTENT:
+        with open("sheets_credentials.json", "w") as f:
+            f.write(config.SHEETS_CREDENTIALS_CONTENT)
     
     missing_files = []
     for file in required_files:
@@ -561,7 +574,12 @@ def main():
         if st.button("🔍 Verificar URLs das Campanhas", type="secondary", use_container_width=True):
             # Initialize Google Ads client
             try:
-                client = GoogleAdsClient.load_from_storage(config.GOOGLE_ADS_YAML)
+                # Check if credentials file exists, if not create it from environment variable
+                if not os.path.exists("google-ads.yaml") and config.GOOGLE_ADS_YAML_CONTENT:
+                    with open("google-ads.yaml", "w") as f:
+                        f.write(config.GOOGLE_ADS_YAML_CONTENT)
+                
+                client = GoogleAdsClient.load_from_storage("google-ads.yaml")
                 st.session_state.client = client
                 st.markdown('<div class="success-box">', unsafe_allow_html=True)
                 st.success("✅ Cliente Google Ads conectado")

@@ -96,6 +96,53 @@ def get_drive_service():
             print("3. A conta de serviço tem permissão para acessar o Google Drive")
         raise e
 
+def test_drive_access():
+    """Testa o acesso ao Google Drive e lista as pastas disponíveis."""
+    try:
+        service = get_drive_service()
+        print("✅ Conexão com Google Drive estabelecida")
+        
+        # Lista todas as pastas que a conta tem acesso
+        print("📁 Testando acesso às pastas...")
+        
+        # Testa acesso à pasta de logos
+        try:
+            logo_folder = service.files().get(fileId=LOGOS_DRIVE_FOLDER_ID).execute()
+            print(f"✅ Pasta de logos encontrada: {logo_folder['name']}")
+            
+            # Lista arquivos na pasta de logos
+            logo_files = service.files().list(
+                q=f"'{LOGOS_DRIVE_FOLDER_ID}' in parents and trashed = false",
+                fields="files(id, name, mimeType)",
+                pageSize=50
+            ).execute()
+            
+            files = logo_files.get('files', [])
+            print(f"📋 Arquivos na pasta de logos ({len(files)} encontrados):")
+            for file in files:
+                print(f"  - {file['name']} ({file['mimeType']})")
+                
+        except Exception as e:
+            print(f"❌ Erro ao acessar pasta de logos: {e}")
+            print(f"⚠️ ID da pasta: {LOGOS_DRIVE_FOLDER_ID}")
+            print("💡 Verifique se:")
+            print("1. O ID da pasta está correto")
+            print("2. A conta de serviço tem acesso à pasta")
+            print("3. A pasta não foi movida ou deletada")
+        
+        # Testa acesso à pasta de templates
+        try:
+            template_folder = service.files().get(fileId=TEMPLATES_DRIVE_FOLDER_ID).execute()
+            print(f"✅ Pasta de templates encontrada: {template_folder['name']}")
+        except Exception as e:
+            print(f"❌ Erro ao acessar pasta de templates: {e}")
+            
+    except Exception as e:
+        print(f"❌ Erro geral ao testar acesso: {e}")
+        return False
+    
+    return True
+
 def list_files_in_folder(folder_id):
     """Lista todos os arquivos em uma pasta do Google Drive."""
     service = get_drive_service()
@@ -125,6 +172,11 @@ def download_file(file_id, output_path):
 def buscar_logo_por_site(site):
     """Busca a logo do site no Google Drive."""
     try:
+        # Primeiro testa o acesso ao Drive
+        if not test_drive_access():
+            print("❌ Não foi possível conectar ao Google Drive")
+            return None
+        
         service = get_drive_service()
         
         # Remove espaços extras do nome do site

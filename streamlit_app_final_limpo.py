@@ -211,6 +211,15 @@ def check_credentials():
     
     return missing_files
 
+def test_drive_permissions():
+    """Testa as permissões do Google Drive e mostra informações detalhadas"""
+    try:
+        from main import test_drive_access
+        return test_drive_access()
+    except Exception as e:
+        st.error(f"❌ Erro ao testar permissões: {e}")
+        return False
+
 def load_campaigns_data():
     """Load campaigns data from Google Sheets"""
     try:
@@ -413,6 +422,14 @@ def main():
             return
         else:
             st.markdown('<div class="success-box">✅ Credenciais encontradas</div>', unsafe_allow_html=True)
+        
+        # Test Drive permissions
+        if st.button("🔍 Testar Acesso ao Google Drive", type="secondary"):
+            with st.spinner("Testando acesso ao Google Drive..."):
+                if test_drive_permissions():
+                    st.markdown('<div class="success-box">✅ Acesso ao Google Drive OK</div>', unsafe_allow_html=True)
+                else:
+                    st.markdown('<div class="error-box">❌ Problema com acesso ao Google Drive</div>', unsafe_allow_html=True)
         
         st.markdown('<div class="sidebar-subheader">📊 Configuração Atual</div>', unsafe_allow_html=True)
         st.markdown('<div class="metric-card"><div class="metric-value">{}</div><div class="metric-label">Dimensões</div></div>'.format(str(config.IMAGE_WIDTH) + 'x' + str(config.IMAGE_HEIGHT)), unsafe_allow_html=True)

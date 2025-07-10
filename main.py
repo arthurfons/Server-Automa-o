@@ -130,30 +130,46 @@ def buscar_logo_por_site(site):
         # Remove espaços extras do nome do site
         site = site.strip()
         
-        # Procura o arquivo da logo no Google Drive - case insensitive
-        query = f"name contains '{site}' and name contains '.png' and '{LOGOS_DRIVE_FOLDER_ID}' in parents and trashed = false"
+        # Lista todos os arquivos PNG na pasta de logos
+        query = f"'{LOGOS_DRIVE_FOLDER_ID}' in parents and mimeType = 'image/png' and trashed = false"
         
         try:
             results = service.files().list(
                 q=query,
                 fields="files(id, name)",
-                pageSize=10
+                pageSize=100
             ).execute()
             files = results.get('files', [])
             
+            print(f"🔍 Procurando logo para: '{site}'")
+            print(f"📁 Arquivos encontrados na pasta de logos: {[f['name'] for f in files]}")
+            
             # Procura por correspondência exata ignorando maiúsculas/minúsculas
             matching_file = None
+            expected_name = f"{site}.png"
+            
             for file in files:
-                if file['name'].lower() == f"{site}.png".lower():
+                file_name_lower = file['name'].lower()
+                expected_name_lower = expected_name.lower()
+                
+                # Correspondência exata
+                if file_name_lower == expected_name_lower:
                     matching_file = file
+                    print(f"✅ Logo encontrada: {file['name']}")
+                    break
+                
+                # Correspondência parcial (sem extensão)
+                elif file_name_lower.replace('.png', '') == site.lower():
+                    matching_file = file
+                    print(f"✅ Logo encontrada (correspondência parcial): {file['name']}")
                     break
             
             if not matching_file:
-                print("❌ Nenhum arquivo correspondente encontrado")
-                print("⚠️ Verifique se:")
-                print(f"1. Existe um arquivo chamado '{site}.png' na pasta")
-                print(f"2. O ID da pasta ({LOGOS_DRIVE_FOLDER_ID}) está correto")
-                print("3. A conta de serviço tem acesso à pasta")
+                print(f"❌ Logo não encontrada para '{site}'")
+                print(f"⚠️ Procurando por: '{expected_name}'")
+                print("📋 Logos disponíveis:")
+                for file in files:
+                    print(f"  - {file['name']}")
                 return None
             
             # Cria o diretório de logos se não existir
@@ -164,6 +180,7 @@ def buscar_logo_por_site(site):
             if not os.path.exists(logo_path):
                 try:
                     download_file(matching_file['id'], logo_path)
+                    print(f"📥 Logo baixada: {logo_path}")
                 except Exception as e:
                     print(f"❌ Erro ao baixar a logo: {str(e)}")
                     return None

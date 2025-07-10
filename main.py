@@ -233,7 +233,7 @@ def download_file(file_id, output_path):
         f.write(fh.getvalue())
 
 def buscar_logo_por_site(site):
-    """Busca a logo do site no Google Drive."""
+    """Busca a logo do site no Google Drive usando paginação para garantir que encontra qualquer logo."""
     try:
         # Primeiro testa o acesso ao Drive
         if not test_drive_access():
@@ -241,71 +241,53 @@ def buscar_logo_por_site(site):
             return None
         
         service = get_drive_service()
-        
-        # Remove espaços extras do nome do site
         site = site.strip()
-        
-        # Lista todos os arquivos PNG na pasta de logos
         query = f"'{LOGOS_DRIVE_FOLDER_ID}' in parents and mimeType = 'image/png' and trashed = false"
-        
-        try:
-            results = service.files().list(
+        all_files = []
+        page_token = None
+        while True:
+            response = service.files().list(
                 q=query,
-                fields="files(id, name)",
-                pageSize=100
+                fields="nextPageToken, files(id, name)",
+                pageSize=1000,
+                pageToken=page_token
             ).execute()
-            files = results.get('files', [])
-            
-            print(f"🔍 Procurando logo para: '{site}'")
-            print(f"📁 Arquivos encontrados na pasta de logos: {[f['name'] for f in files]}")
-            
-            # Procura por correspondência exata ignorando maiúsculas/minúsculas
-            matching_file = None
-            expected_name = f"{site}.png"
-            
-            for file in files:
-                file_name_lower = file['name'].lower()
-                expected_name_lower = expected_name.lower()
-                
-                # Correspondência exata
-                if file_name_lower == expected_name_lower:
-                    matching_file = file
-                    print(f"✅ Logo encontrada: {file['name']}")
-                    break
-                
-                # Correspondência parcial (sem extensão)
-                elif file_name_lower.replace('.png', '') == site.lower():
-                    matching_file = file
-                    print(f"✅ Logo encontrada (correspondência parcial): {file['name']}")
-                    break
-            
-            if not matching_file:
-                print(f"❌ Logo não encontrada para '{site}'")
-                print(f"⚠️ Procurando por: '{expected_name}'")
-                print("📋 Logos disponíveis:")
-                for file in files:
-                    print(f"  - {file['name']}")
-                return None
-            
-            # Cria o diretório de logos se não existir
-            os.makedirs(LOGOS_DIR, exist_ok=True)
-            logo_path = os.path.join(LOGOS_DIR, f"{site}.png")
-            
-            # Baixa a logo se ainda não estiver no cache local
-            if not os.path.exists(logo_path):
-                try:
-                    download_file(matching_file['id'], logo_path)
-                    print(f"📥 Logo baixada: {logo_path}")
-                except Exception as e:
-                    print(f"❌ Erro ao baixar a logo: {str(e)}")
-                    return None
-            
-            return logo_path
-            
-        except Exception as e:
-            print(f"❌ Erro ao buscar arquivos no Drive: {str(e)}")
+            all_files.extend(response.get('files', []))
+            page_token = response.get('nextPageToken', None)
+            if not page_token:
+                break
+        print(f"🔍 Procurando logo para: '{site}'")
+        print(f"📁 Arquivos encontrados na pasta de logos: {[f['name'] for f in all_files]}")
+        matching_file = None
+        expected_name = f"{site}.png"
+        for file in all_files:
+            file_name_lower = file['name'].lower()
+            expected_name_lower = expected_name.lower()
+            if file_name_lower == expected_name_lower:
+                matching_file = file
+                print(f"✅ Logo encontrada: {file['name']}")
+                break
+            elif file_name_lower.replace('.png', '') == site.lower():
+                matching_file = file
+                print(f"✅ Logo encontrada (correspondência parcial): {file['name']}")
+                break
+        if not matching_file:
+            print(f"❌ Logo não encontrada para '{site}'")
+            print(f"⚠️ Procurando por: '{expected_name}'")
+            print("📋 Logos disponíveis:")
+            for file in all_files:
+                print(f"  - {file['name']}")
             return None
-            
+        os.makedirs(LOGOS_DIR, exist_ok=True)
+        logo_path = os.path.join(LOGOS_DIR, f"{site}.png")
+        if not os.path.exists(logo_path):
+            try:
+                download_file(matching_file['id'], logo_path)
+                print(f"📥 Logo baixada: {logo_path}")
+            except Exception as e:
+                print(f"❌ Erro ao baixar a logo: {str(e)}")
+                return None
+        return logo_path
     except Exception as e:
         print(f"❌ Erro geral ao buscar logo: {str(e)}")
         return None

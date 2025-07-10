@@ -81,11 +81,34 @@ SHEET_RANGE = config.SHEET_RANGE
 def get_drive_service():
     """Inicializa e retorna o serviço do Google Drive."""
     try:
+        # Verifica se o arquivo existe, se não, cria a partir da variável de ambiente
+        if not os.path.exists("drive_credentials.json") and config.DRIVE_CREDENTIALS_CONTENT:
+            print("📝 Criando drive_credentials.json a partir da variável de ambiente...")
+            with open("drive_credentials.json", "w") as f:
+                f.write(config.DRIVE_CREDENTIALS_CONTENT)
+            print("✅ Arquivo drive_credentials.json criado")
+        
+        # Verifica se o arquivo existe
+        if not os.path.exists("drive_credentials.json"):
+            raise Exception("Arquivo drive_credentials.json não encontrado")
+        
+        # Lê e valida o conteúdo do arquivo
+        with open("drive_credentials.json", "r") as f:
+            content = f.read()
+            if not content.strip():
+                raise Exception("Arquivo drive_credentials.json está vazio")
+        
+        print("📋 Usando arquivo drive_credentials.json existente")
+        
         SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
         creds = service_account.Credentials.from_service_account_file("drive_credentials.json", scopes=SCOPES)
         service = build('drive', 'v3', credentials=creds)
+        
         # Testa a conexão
+        print("🔍 Testando conexão com Google Drive...")
         service.files().list(pageSize=1).execute()
+        print("✅ Conexão com Google Drive estabelecida")
+        
         return service
     except Exception as e:
         print(f"❌ Erro ao inicializar o serviço do Drive: {str(e)}")
@@ -99,6 +122,15 @@ def get_drive_service():
 def test_drive_access():
     """Testa o acesso ao Google Drive e lista as pastas disponíveis."""
     try:
+        print("🚀 Iniciando teste de acesso ao Google Drive...")
+        
+        # Verifica se as variáveis de ambiente estão disponíveis
+        if config.DRIVE_CREDENTIALS_CONTENT:
+            print("✅ Variável DRIVE_CREDENTIALS encontrada")
+        else:
+            print("❌ Variável DRIVE_CREDENTIALS não encontrada")
+            return False
+        
         service = get_drive_service()
         print("✅ Conexão com Google Drive estabelecida")
         

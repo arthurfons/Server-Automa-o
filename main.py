@@ -122,6 +122,12 @@ def test_drive_access():
             for file in files:
                 print(f"  - {file['name']} ({file['mimeType']})")
                 
+            # Verifica se há logos que correspondem ao padrão esperado
+            png_files = [f for f in files if f['mimeType'] == 'image/png']
+            print(f"🎨 Logos PNG encontradas ({len(png_files)}):")
+            for file in png_files:
+                print(f"  - {file['name']}")
+                
         except Exception as e:
             print(f"❌ Erro ao acessar pasta de logos: {e}")
             print(f"⚠️ ID da pasta: {LOGOS_DRIVE_FOLDER_ID}")
@@ -142,6 +148,29 @@ def test_drive_access():
         return False
     
     return True
+
+def list_all_logos():
+    """Lista todas as logos disponíveis no Google Drive."""
+    try:
+        service = get_drive_service()
+        
+        # Lista todos os arquivos PNG na pasta de logos
+        logo_files = service.files().list(
+            q=f"'{LOGOS_DRIVE_FOLDER_ID}' in parents and mimeType = 'image/png' and trashed = false",
+            fields="files(id, name)",
+            pageSize=100
+        ).execute()
+        
+        files = logo_files.get('files', [])
+        print(f"🎨 Todas as logos disponíveis ({len(files)}):")
+        for file in files:
+            print(f"  - {file['name']}")
+        
+        return files
+        
+    except Exception as e:
+        print(f"❌ Erro ao listar logos: {e}")
+        return []
 
 def list_files_in_folder(folder_id):
     """Lista todos os arquivos em uma pasta do Google Drive."""

@@ -431,6 +431,23 @@ def main():
                 else:
                     st.markdown('<div class="error-box">❌ Problema com acesso ao Google Drive</div>', unsafe_allow_html=True)
         
+        # List all logos
+        if st.button("🎨 Listar Todas as Logos", type="secondary"):
+            with st.spinner("Listando logos disponíveis..."):
+                try:
+                    from main import list_all_logos
+                    logos = list_all_logos()
+                    if logos:
+                        st.markdown('<div class="success-box">✅ Logos encontradas</div>', unsafe_allow_html=True)
+                        with st.expander("Ver todas as logos"):
+                            for logo in logos:
+                                st.write(f"• {logo['name']}")
+                    else:
+                        st.markdown('<div class="warning-box">⚠️ Nenhuma logo encontrada</div>', unsafe_allow_html=True)
+                except Exception as e:
+                    st.markdown('<div class="error-box">❌ Erro ao listar logos</div>', unsafe_allow_html=True)
+                    st.error(str(e))
+        
         st.markdown('<div class="sidebar-subheader">📊 Configuração Atual</div>', unsafe_allow_html=True)
         st.markdown('<div class="metric-card"><div class="metric-value">{}</div><div class="metric-label">Dimensões</div></div>'.format(str(config.IMAGE_WIDTH) + 'x' + str(config.IMAGE_HEIGHT)), unsafe_allow_html=True)
         st.markdown('<div class="metric-card"><div class="metric-value">{}</div><div class="metric-label">Logo</div></div>'.format(str(config.LOGO_WIDTH) + 'x' + str(config.LOGO_HEIGHT)), unsafe_allow_html=True)
